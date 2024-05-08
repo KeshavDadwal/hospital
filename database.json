@@ -1,0 +1,11 @@
+{
+    "dev": {
+      "driver": "mysql", 
+      "host": "localhost",
+      "user": "root",
+      "password": "Qwerty@12",
+      "database": "hospital",
+      "multipleStatements": true
+    }
+  }
+  
