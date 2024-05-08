@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 function verifyToken(req, res, next) {
-    const token = req.headers['X-Access-Token'] || req.query.token;
+    const token = req.headers['x-access-token'] || req.query.token;
     if (!token) {
         return res.status(401).json({ success: false, message: 'No token provided' });
     }
@@ -8,7 +8,7 @@ function verifyToken(req, res, next) {
         if (err) {
             return res.status(403).json({ success: false, message: 'Failed to authenticate token' });
         } else {
-            req.decoded = decoded;
+            req.decodedToken = decoded;
             next();
         }
     });

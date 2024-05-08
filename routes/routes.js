@@ -7,6 +7,7 @@ const RoleController = require("../controllers/role.controller");
 const PermissionController = require("../controllers/permission.controller");
 const RolePermissionController = require("../controllers/role_permission.controller");
 const CarerController = require("../controllers/carer.controller");
+const MobileClientController = require("../controllers/mobile.client.controller");
 const CompanyController = require("../controllers/company.controller");
 const verifyToken = require('../helpers/middleware');
 
@@ -47,5 +48,7 @@ router.delete('/carer/:id', CarerController.handlerDeleteCarer);
 
 ////////////////////////////////////////// Mobile
 router.post('/carerlogin', CarerController.handlerCarerLogin);
+router.get('/getcarer', MobileClientController.handlerGetMobileClient);
+
 
 module.exports = router;

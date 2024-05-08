@@ -1,21 +1,39 @@
-const responseObject = (success, message, data = null, statusCode = 200) => {
-    return {
-        success: success,
-        message: message,
-        data: data
-    };
-};
+const responseObject = (
+    req,
+    res,
+    data,
+    code = responseCode.OK,
+    success = true,
+    message = ""
+  ) =>
+    res.status(code).send({
+    code,
+    message:message,
+    success:success,
+    data,
+  });
 
-const paginationResponseObject = (success, message, data, totalPages, currentPage, statusCode = 200) => {
-    return {
-        success: success,
-        message: message,
-        data: data,
-        pagination: {
-            totalPages: totalPages,
-            currentPage: currentPage
-        }
-    };
-};
+
+  const paginationResponseObject = (
+    req,
+    res,
+    data,
+    totalPages,
+    page,
+    pageSize,
+    code = responseCode.OK,
+    success = true,
+    message = ""
+  ) =>
+    res.status(code).send({
+    code,
+    message:message,
+    success:success,
+    totalPages,
+    page,
+    pageSize,
+    data,
+  });
+
 
 module.exports = { responseObject, paginationResponseObject };

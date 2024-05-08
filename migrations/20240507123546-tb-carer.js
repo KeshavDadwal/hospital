@@ -21,7 +21,7 @@ exports.up = function(db, callback) {
     picture: { type: 'string', length: 255, notNull: true },
     firstname: { type: 'string', length: 255, notNull: true },
     lastname: { type: 'string', length: 255, notNull: true },
-    email: { type: 'string', length: 255, notNull: true },
+    email: { type: 'string', length: 255, notNull: true, unique: true },
     password: { type: 'string', length: 255, notNull: true },
     joining_date: { type: 'date', notNull: true },
     blocked: { type: 'boolean', defaultValue: false },

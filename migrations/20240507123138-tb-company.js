@@ -19,7 +19,7 @@ exports.setup = function(options, seedLink) {
       id: { type: 'int', primaryKey: true, autoIncrement: true },
       role_id: { type: 'int', notNull: true },
       name: { type: 'string', length: 255, notNull: true },
-      email: { type: 'string', length: 255, notNull: true },
+      email: { type: 'string', length: 255, notNull: true, unique: true },
       password: { type: 'string', length: 255, notNull: true },
       phone: { type: 'string', length: 20, notNull: true },
       address: { type: 'string', length: 255, notNull: true },

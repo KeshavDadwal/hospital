@@ -1,18 +1,20 @@
 const {responseObject,paginationResponseObject} = require("../helpers/responseCode");
 const {responseCode} = require("../helpers/statusCode");
+const {responseMessage} = require("../helpers/statusCodeMsg");
 const Company  = require('../models/company');
-const generateRandomString = require('../helpers/randomString');
-const sendEmail = require("../helpers/mail");
+const {GenerateRandomString} = require('../helpers/randomString')
+const {sendEmail} = require("../helpers/mail");
 const jwt = require('jsonwebtoken');
 
 const bcrypt = require('bcrypt');
 
+
 async function handlerCreateCompany(req, res) {
     try {
         const { name, email, phone, address, website } = req.body;
-        const role_id = 2;
+        const role_id = 1;
 
-        let password = generateRandomString(8);
+        let password = GenerateRandomString(8);
         const hashedPassword = await bcrypt.hash(password, 10);
         const company = await Company.create({
             name,
@@ -24,37 +26,50 @@ async function handlerCreateCompany(req, res) {
             password: hashedPassword,
         });
 
+        
+        const responseData = { ...company.dataValues };
+        delete responseData.password;
+
         if (company) {
-            sendEmail(email,password);
+            await sendEmail(email, password);
             return responseObject(
                 req,
                 res,
-                company.dataValues,
+                responseData,
                 responseCode.OK,
                 true,
-                "COMPANY_CREATED_SUCCESSFULLY"
+                responseMessage.COMPANY_CREATED_SUCCESSFULLY
             );
         } else {
-            console.log("error",err);
             return responseObject(
                 req,
                 res,
                 "",
                 responseCode.INTERNAL_SERVER_ERROR,
                 true,
-                "SOMETHING_WENT_WRONG"
+                responseMessage.SOMETHING_WENT_WRONG
             );
         }
     } catch (err) {
-        console.log("error1",err);
-        return responseObject(
-            req,
-            res,
-            "",
-            responseCode.INTERNAL_SERVER_ERROR,
-            false,
-            "SOMETHING_WENT_WRONG"
-        );
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            return responseObject(
+                req,
+                res,
+                "",
+                responseCode.BAD_REQUEST, 
+                false,
+                responseMessage.EMAIL_ALREADY_IN_USE
+            );
+        } else {
+            return responseObject(
+                req,
+                res,
+                "",
+                responseCode.INTERNAL_SERVER_ERROR,
+                false,
+                responseMessage.SOMETHING_WENT_WRONG
+            );
+        }
     }
 }
 
@@ -78,7 +93,7 @@ async function handlerResetCompanyPassword(req, res) {
                     "",
                     responseCode.OK,
                     true,
-                    "PASSWORD_RESET_SUCCESSFULLY"
+                    responseMessage.PASSWORD_RESET_SUCCESSFULLY
                 );
             } else {
                 return responseObject(
@@ -87,7 +102,7 @@ async function handlerResetCompanyPassword(req, res) {
                     "",
                     responseCode.UNAUTHORIZED, 
                     true,
-                    "INVALID_PASSWORD"
+                    responseMessage.INVALID_PASSWORD
                 );
             }
         } else {
@@ -97,18 +112,17 @@ async function handlerResetCompanyPassword(req, res) {
                 "",
                 responseCode.NOT_FOUND, 
                 true,
-                "COMPANY_NOT_FOUND"
+                responseMessage.COMPANY_NOT_FOUND
             );
         }
     } catch (err) {
-        console.error("Error:", err);
         return responseObject(
             req,
             res,
             "",
             responseCode.INTERNAL_SERVER_ERROR,
             false,
-            "SOMETHING_WENT_WRONG"
+            responseMessage.SOMETHING_WENT_WRONG
         );
     }
 }
@@ -136,7 +150,7 @@ async function handlerCompanyLogin(req, res) {
                     { token: token },
                     responseCode.OK,
                     true,
-                    "LOGIN_SUCCESSFULLY"
+                    responseMessage.LOGIN_SUCCESSFULLY
                 );
             } else {
                 return responseObject(
@@ -144,8 +158,8 @@ async function handlerCompanyLogin(req, res) {
                     res,
                     "",
                     responseCode.UNAUTHORIZED,
-                    true,
-                    "USERNAME_OR_PASSWORD_INVALID"
+                    false,
+                    responseMessage.INVALID_LOGIN_OR_PASSWORD
                 );
             }
         } else {
@@ -155,18 +169,17 @@ async function handlerCompanyLogin(req, res) {
                 "",
                 responseCode.NOT_FOUND, 
                 true,
-                "COMPANY_NOT_FOUND"
+                responseMessage.UNABLE_TO_FIND_THE_COMPANY
             );
         }
     } catch (err) {
-        console.error("Error:", err);
         return responseObject(
             req,
             res,
             "",
             responseCode.INTERNAL_SERVER_ERROR,
             false,
-            "SOMETHING_WENT_WRONG"
+            responseMessage.SOMETHING_WENT_WRONG
         );
     }
 }

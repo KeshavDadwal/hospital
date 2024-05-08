@@ -1,11 +1,14 @@
 const {responseObject,paginationResponseObject} = require("../helpers/responseCode");
 const {responseCode} = require("../helpers/statusCode");
-const sendEmail = require("../helpers/mail");
-const generateRandomString = require('../helpers/randomString');
+const {responseMessage} = require("../helpers/statusCodeMsg");
+const {sendEmail} = require("../helpers/mail");
+const {GenerateRandomString} = require('../helpers/randomString');
 const bcrypt = require('bcrypt');
 const Carer  = require('../models/carer');
 const CarerLogin  = require('../models/carerLogin');
 const jwt = require('jsonwebtoken');
+const uploadImage = require('../helpers/s3bucket');
+require('dotenv').config(); 
 
 
 async function handlerCreateCarer(req, res) {
@@ -17,16 +20,16 @@ async function handlerCreateCarer(req, res) {
                 "",
                 responseCode.BAD_REQUEST,
                 false,
-                "Please upload an image"
+                responseMessage.PLEASE_UPLOAD_THE_IMAGE
             );
         }
         
         const { company_id} = req.decodedToken;
         const { firstname, lastname, joining_date,email } = req.body;
         let { blocked } = req.body; 
-        let password = generateRandomString(8);
+        let password = GenerateRandomString(8);
         const hashedPassword = await bcrypt.hash(password, 10);
-        const picture = req.file.originalname;
+        const picture = await uploadImage(req.file.path, req.file.originalname,"carer");
 
         blocked = blocked === null || blocked === undefined ? false : blocked;
         const newCarer = await Carer.create({
@@ -41,7 +44,7 @@ async function handlerCreateCarer(req, res) {
         });
 
         if (newCarer) {
-            sendEmail(email, password); 
+            await sendEmail(email, password); 
             const responseData = {
                 id: newCarer.id,
                 company_id: newCarer.company_id,
@@ -59,7 +62,7 @@ async function handlerCreateCarer(req, res) {
                 responseData,
                 responseCode.OK,
                 true,
-                "CARER_CREATED_SUCCESSFULLY"
+                responseMessage.CARER_CREATED_SUCCESSFULLY
             );
         } else {
             return responseObject(
@@ -68,18 +71,29 @@ async function handlerCreateCarer(req, res) {
                 "",
                 responseCode.INTERNAL_SERVER_ERROR,
                 true,
-                "SOMETHING_WENT_WRONG"
+                responseMessage.SOMETHING_WENT_WRONG
             );
         }
     } catch (err) {
-        return responseObject(
-            req,
-            res,
-            "",
-            responseCode.INTERNAL_SERVER_ERROR,
-            false,
-            "SOMETHING_WENT_WRONG"
-        );
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            return responseObject(
+                req,
+                res,
+                "",
+                responseCode.BAD_REQUEST, 
+                false,
+               responseMessage.EMAIL_ALREADY_IN_USE
+            );
+        } else {
+            return responseObject(
+                req,
+                res,
+                "",
+                responseCode.INTERNAL_SERVER_ERROR,
+                false,
+                responseMessage.SOMETHING_WENT_WRONG
+            );
+        }
     }
 }
 
@@ -108,6 +122,13 @@ async function handlerGetCarer(req, res) {
         const totalPages = Math.floor((totalCount + pageSize - 1) / pageSize);
 
         if (totalCount > 0) {
+
+            carers.forEach(carer => {
+    
+                carer.picture = process.env.BUCKET_URL+"/" + carer.picture;
+            });
+
+
             return paginationResponseObject(
                 req,
                 res,
@@ -126,7 +147,7 @@ async function handlerGetCarer(req, res) {
                 "",
                 responseCode.OK,
                 true,
-                "NO DATA FOUND"
+               responseMessage.NO_DATA_FOUND
             );
         }
     } catch (err) {
@@ -136,7 +157,7 @@ async function handlerGetCarer(req, res) {
             "",
             responseCode.INTERNAL_SERVER_ERROR,
             false,
-            "SOMETHING_WENT_WRONG"
+            responseMessage.SOMETHING_WENT_WRONG
         );
     }
 }
@@ -158,7 +179,7 @@ async function handlerGetCarerById(req,res) {
                 "",
                 responseCode.NOT_FOUND,
                 false,
-                "CARER NOT FOUND"
+                responseMessage.CARER_NOT_FOUND
             );
         }
         if (carer) {
@@ -178,7 +199,7 @@ async function handlerGetCarerById(req,res) {
             "",
             responseCode.INTERNAL_SERVER_ERROR,
             false,
-            "SOMETHING_WENT_WRONG"
+            responseMessage.SOMETHING_WENT_WRONG
         );
     }
 }
@@ -194,16 +215,14 @@ async function handlerUpdateCarer(req, res) {
                 "",
                 responseCode.BAD_REQUEST,
                 false,
-                "Please upload an image"
+                responseMessage.PLEASE_UPLOAD_THE_IMAGE
             );
         }
 
         const { company_id} = req.decodedToken;
         const carerId = req.params.id; 
-        const {firstname, lastname, joining_date,email } = req.body;
-        let { blocked } = req.body; 
-        blocked = blocked === null || blocked === undefined ? false : blocked;
-        const picture = req.file.originalname;
+        const {firstname, lastname} = req.body;
+        const picture = await uploadImage(req.file.path, req.file.originalname,"carer");
         const carer = await Carer.findOne({
             where: {
               id: carerId,
@@ -218,7 +237,7 @@ async function handlerUpdateCarer(req, res) {
                 "",
                 responseCode.NOT_FOUND,
                 false,
-                "CARER NOT FOUND"
+                responseMessage.CARER_NOT_FOUND
             );
         }
 
@@ -226,10 +245,7 @@ async function handlerUpdateCarer(req, res) {
             company_id,
             picture,
             firstname,
-            lastname,
-            email,
-            joining_date,
-            blocked
+            lastname
         });
 
         return responseObject(
@@ -238,7 +254,7 @@ async function handlerUpdateCarer(req, res) {
             carer,
             responseCode.OK,
             true,
-            "CARER_UPDATED_SUCCESSFULLY"
+            responseMessage.CARER_UPDATED_SUCCESSFULLY
         );
     } catch (err) {
         return responseObject(
@@ -247,7 +263,7 @@ async function handlerUpdateCarer(req, res) {
             "",
             responseCode.INTERNAL_SERVER_ERROR,
             false,
-            "SOMETHING_WENT_WRONG"
+           responseMessage.SOMETHING_WENT_WRONG
         );
     }
 }
@@ -271,7 +287,7 @@ async function handlerDeleteCarer(req, res) {
                 "",
                 responseCode.NOT_FOUND,
                 false,
-                "CARER NOT FOUND"
+                responseMessage.CARER_NOT_FOUND
             );
         }
 
@@ -283,7 +299,7 @@ async function handlerDeleteCarer(req, res) {
             "",
             responseCode.OK,
             true,
-            "CARER_DELETED_SUCCESSFULLY"
+            responseMessage.CARER_DELETED_SUCCESSFULLY
         );
     } catch (err) {
         return responseObject(
@@ -292,7 +308,7 @@ async function handlerDeleteCarer(req, res) {
             "",
             responseCode.INTERNAL_SERVER_ERROR,
             false,
-            "SOMETHING_WENT_WRONG"
+            responseMessage.SOMETHING_WENT_WRONG
         );
     }
 }
@@ -334,7 +350,7 @@ async function handlerCarerLogin(req, res) {
                         responseData,
                         responseCode.OK,
                         true,
-                        "CARER LOGIN_SUCCESSFULLY"
+                        responseMessage.CARER_LOGIN_SUCCESSFULLY
                     );
                 }
             } else {
@@ -344,7 +360,7 @@ async function handlerCarerLogin(req, res) {
                     "",
                     responseCode.UNAUTHORIZED,
                     true,
-                    "USERNAME_OR_PASSWORD_INVALID"
+                    responseMessage.INVALID_LOGIN_OR_PASSWORD
                 );
             }
         } else {
@@ -354,18 +370,17 @@ async function handlerCarerLogin(req, res) {
                 "",
                 responseCode.NOT_FOUND, 
                 true,
-                "COMPANY_NOT_FOUND"
+                responseMessage.UNABLE_TO_FIND_THE_CARER
             );
         }
     } catch (err) {
-        console.error("Error:", err);
         return responseObject(
             req,
             res,
             "",
             responseCode.INTERNAL_SERVER_ERROR,
             false,
-            "SOMETHING_WENT_WRONG"
+            responseMessage.SOMETHING_WENT_WRONG
         );
     }
 }

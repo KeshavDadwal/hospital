@@ -20,7 +20,7 @@ exports.up = function(db, callback) {
     picture: { type: 'string', length: 255, notNull: true },
     firstname: { type: 'string', length: 255, notNull: true },
     lastname: { type: 'string', length: 255, notNull: true },
-    email: { type: 'string', length: 255, notNull: true },
+    email: { type: 'string', length: 255, notNull: true, unique: true },
     joining_date: { type: 'date', notNull: true },
     created_at: { type: 'timestamp', defaultValue: new String('CURRENT_TIMESTAMP') },
     updated_at: { type: 'timestamp', defaultValue: new String('CURRENT_TIMESTAMP') }

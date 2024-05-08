@@ -1,14 +1,12 @@
 const nodemailer = require('nodemailer');
-require('dotenv').config(); 
+require('dotenv').config();
 
-async function sendEmail(email, password) {
+const sendEmail = async (email, password) => {
     let transporter = nodemailer.createTransport({
-        host: 'smtp.example.com', 
-        port: 587, 
-        secure: false, 
+        service: 'gmail',
         auth: {
-            user: process.env.DB_MAIL_FROM,
-            pass: process.env.DB_MAIL_PASS
+            user: process.env.GMAIL_USER,
+            pass: process.env.GMAIL_PASSWORD
         }
     });
 
@@ -19,15 +17,13 @@ async function sendEmail(email, password) {
     `;
 
     let info = await transporter.sendMail({
-        from: '"Your Name" <your_email@example.com>',
-        to: email, 
-        subject: 'Your Password', 
-        html: htmlContent 
+        from: `"Your Name" <${process.env.GMAIL_USER}>`,
+        to: email,
+        subject: 'Your Password',
+        html: htmlContent
     });
-
-    console.log('Message sent: %s', info.messageId);
 }
 
-module.exports= {
+module.exports = {
     sendEmail
 }

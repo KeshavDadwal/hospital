@@ -1,6 +1,9 @@
 const {responseObject,paginationResponseObject} = require("../helpers/responseCode");
 const {responseCode} = require("../helpers/statusCode");
+const {responseMessage} = require("../helpers/statusCodeMsg");
 const Client  = require('../models/client');
+const uploadImage = require('../helpers/s3bucket');
+require('dotenv').config(); 
 
 
 async function handlerCreateClient(req, res) {
@@ -12,13 +15,13 @@ async function handlerCreateClient(req, res) {
                 "",
                 responseCode.BAD_REQUEST,
                 false,
-                "Please upload an image"
+                responseMessage.PLEASE_UPLOAD_THE_IMAGE
             );
         }
         
         const { company_id} = req.decodedToken;
         const { firstname, lastname, joining_date,email } = req.body;
-        const picture = req.file.originalname;
+        const picture = await uploadImage(req.file.path, req.file.originalname,"client");
         const newClient = await Client.create({
             company_id,
             picture,
@@ -35,35 +38,44 @@ async function handlerCreateClient(req, res) {
                 newClient.dataValues,
                 responseCode.OK,
                 true,
-                "CLIENT_CREATED_SUCCESSFULLY"
+                responseMessage.CLIENT_CREATED_SUCCESSFULLY
             );
         } else {
-            console.log("errr",err)
             return responseObject(
                 req,
                 res,
                 "",
                 responseCode.INTERNAL_SERVER_ERROR,
                 true,
-                "SOMETHING_WENT_WRONG"
+                responseMessage.UNABLE_TO_CREATE_THE_COMPANY
             );
         }
     } catch (err) {
-        console.log("errr1212",err)
-        return responseObject(
-            req,
-            res,
-            "",
-            responseCode.INTERNAL_SERVER_ERROR,
-            false,
-            "SOMETHING_WENT_WRONG"
-        );
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            return responseObject(
+                req,
+                res,
+                "",
+                responseCode.BAD_REQUEST, 
+                false,
+               responseMessage.EMAIL_ALREADY_IN_USE
+            );
+        } else {
+            return responseObject(
+                req,
+                res,
+                "",
+                responseCode.INTERNAL_SERVER_ERROR,
+                false,
+                responseMessage.SOMETHING_WENT_WRONG
+            );
+        }
     }
 }
 
 async function handlerGetClient(req, res) {
     try {
-
+console.log("datatattatata======")
         const { company_id} = req.decodedToken;
         const page = req.query.page ? parseInt(req.query.page) : 1;
         const pageSize = req.query.pageSize ? parseInt(req.query.pageSize) : 10;
@@ -83,6 +95,12 @@ async function handlerGetClient(req, res) {
         const totalPages = Math.floor((totalCount + pageSize - 1) / pageSize)
 
         if (totalCount > 0) {
+
+            clients.forEach(client => {
+    
+                client.picture = process.env.BUCKET_URL+"/" + client.picture;
+            });
+
             return paginationResponseObject(
                 req,
                 res,
@@ -92,7 +110,7 @@ async function handlerGetClient(req, res) {
                 pageSize,
                 responseCode.OK,
                 true,
-                ""
+                responseMessage.CLIENT_CREATED_SUCCESSFULLY
             );
         } else {
             return responseObject(
@@ -101,17 +119,18 @@ async function handlerGetClient(req, res) {
                 "",
                 responseCode.OK,
                 true,
-                "NO DATA FOUND"
+                responseMessage.NO_DATA_FOUND
             );
         }
     } catch (err) {
+        console.log("datatattatata======qweqwe",err)
         return responseObject(
             req,
             res,
             "",
             responseCode.INTERNAL_SERVER_ERROR,
             false,
-            "SOMETHING_WENT_WRONG"
+            responseMessage.SOMETHING_WENT_WRONG
         );
     }
 }
@@ -134,7 +153,7 @@ async function handlerGetClientById(req,res) {
                 "",
                 responseCode.NOT_FOUND,
                 false,
-                "CLIENT NOT FOUND"
+                responseMessage.CLIENT_NOT_FOUND
             );
         }
         if (client) {
@@ -154,7 +173,7 @@ async function handlerGetClientById(req,res) {
             "",
             responseCode.INTERNAL_SERVER_ERROR,
             false,
-            "SOMETHING_WENT_WRONG"
+            responseMessage.SOMETHING_WENT_WRONG
         );
     }
 }
@@ -169,14 +188,14 @@ async function handlerUpdateClient(req, res) {
                 "",
                 responseCode.BAD_REQUEST,
                 false,
-                "Please upload an image"
+                responseMessage.PLEASE_UPLOAD_THE_IMAGE
             );
         }
 
         const { company_id} = req.decodedToken;
         const clientId = req.params.id; 
-        const {firstname, lastname, joining_date,email } = req.body;
-        const picture = req.file.originalname;
+        const {firstname, lastname} = req.body;
+        const picture = await uploadImage(req.file.path, req.file.originalname,"client");
         const client = await Client.findOne({
             where: {
               id: clientId,
@@ -191,7 +210,7 @@ async function handlerUpdateClient(req, res) {
                 "",
                 responseCode.NOT_FOUND,
                 false,
-                "CLIENT NOT FOUND"
+                responseMessage.CLIENT_NOT_FOUND
             );
         }
 
@@ -200,8 +219,6 @@ async function handlerUpdateClient(req, res) {
             picture,
             firstname,
             lastname,
-            email,
-            joining_date
         });
 
         return responseObject(
@@ -210,7 +227,7 @@ async function handlerUpdateClient(req, res) {
             client,
             responseCode.OK,
             true,
-            "CLIENT_UPDATED_SUCCESSFULLY"
+            responseMessage.CLIENT_UPDATED_SUCCESSFULLY
         );
     } catch (err) {
         return responseObject(
@@ -219,7 +236,7 @@ async function handlerUpdateClient(req, res) {
             "",
             responseCode.INTERNAL_SERVER_ERROR,
             false,
-            "SOMETHING_WENT_WRONG"
+            responseMessage.SOMETHING_WENT_WRONG
         );
     }
 }
@@ -242,7 +259,7 @@ async function handlerDeleteClient(req, res) {
                 "",
                 responseCode.NOT_FOUND,
                 false,
-                "CLIENT NOT FOUND"
+               responseMessage.CLIENT_NOT_FOUND
             );
         }
 
@@ -254,7 +271,7 @@ async function handlerDeleteClient(req, res) {
             "",
             responseCode.OK,
             true,
-            "CLIENT_DELETED_SUCCESSFULLY"
+            responseMessage.CLIENT_DELETED_SUCCESSFULLY
         );
     } catch (err) {
         return responseObject(
@@ -263,7 +280,7 @@ async function handlerDeleteClient(req, res) {
             "",
             responseCode.INTERNAL_SERVER_ERROR,
             false,
-            "SOMETHING_WENT_WRONG"
+          responseMessage.SOMETHING_WENT_WRONG
         );
     }
 }
