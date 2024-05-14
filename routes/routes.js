@@ -49,6 +49,8 @@ router.delete('/carer/:id', CarerController.handlerDeleteCarer);
 ////////////////////////////////////////// Mobile
 router.post('/carerlogin', CarerController.handlerCarerLogin);
 router.get('/getcarer', MobileClientController.handlerGetMobileClient);
+router.get('/video', CarerController.handlerGetCarerVideo);
+router.post('/uploadvideo', multerMiddleware.single('video'),CarerController.handlerCreateVideo);
 
 
 module.exports = router;

@@ -5,6 +5,7 @@ const {sendEmail} = require("../helpers/mail");
 const {GenerateRandomString} = require('../helpers/randomString');
 const bcrypt = require('bcrypt');
 const Carer  = require('../models/carer');
+const Video  = require('../models/video');
 const CarerLogin  = require('../models/carerLogin');
 const jwt = require('jsonwebtoken');
 const uploadImage = require('../helpers/s3bucket');
@@ -386,6 +387,131 @@ async function handlerCarerLogin(req, res) {
 }
 
 
+async function handlerGetCarerVideo(req, res) {
+    try {
+        const { client } = req.query;
+        if (!client) {
+            return res.status(400).json({
+                success: false,
+                message: "client_id is required"
+            });
+        }
+        const page = req.query.page ? parseInt(req.query.page) : 1;
+        const pageSize = req.query.pageSize ? parseInt(req.query.pageSize) : 10;
+        const offset = (page - 1) * pageSize;
+
+        const videosData = await Video.findAndCountAll({
+            attributes: ['id', 'title', 'views', 'likes','video_path','created_at', 'updated_at'],
+            where: {
+                client_id: client
+            },
+            limit: pageSize,
+            offset: offset,
+            order: [['created_at', 'DESC']]
+        });
+
+        const totalCount = videosData.count;
+        const videos = videosData.rows;
+
+        videos.forEach(video => {
+    
+            video.video_path = process.env.BUCKET_URL+"/" + video.video_path;
+        });
+
+        const totalPages = Math.ceil(totalCount / pageSize);
+
+        if (totalCount > 0) {
+            return paginationResponseObject(
+                req,
+                res,
+                videos,
+                totalPages,
+                page,
+                pageSize,
+                responseCode.OK,
+                true,
+                ""
+            );
+        } else {
+            return responseObject(
+                req,
+                res,
+                "",
+                responseCode.NOT_FOUND,
+                false,
+                responseMessage.NO_VIDEOS_FOUND
+            );
+        }
+    } catch (err) {
+        console.log("errrrrr======",err)
+        return responseObject(
+            req,
+            res,
+            "",
+            responseCode.BAD_REQUEST,
+            false,
+            responseMessage.SOMETHING_WENT_WRONG
+        );
+    }
+}
+
+
+
+async function handlerCreateVideo(req, res) {
+    try {
+        console.log("hlo")
+        if (!req.file) {
+            return responseObject(
+                req,
+                res,
+                "",
+                responseCode.BAD_REQUEST,
+                false,
+                responseMessage.PLEASE_UPLOAD_THE_VIDEO
+            );
+        }
+        
+        const { client_id, likes, views } = req.body;
+        const videoName = req.file.originalname;
+        const videoPath = await uploadImage(req.file.path, videoName,"videos");
+        const newVideo = await Video.create({
+            client_id,
+            likes,
+            views,
+            title: videoName, 
+            video_path: videoPath
+        });
+
+        if (newVideo) {
+            return responseObject(
+                req,
+                res,
+                newVideo,
+                responseCode.OK,
+                true,
+                responseMessage.VIDEOS_UPLOADED_SUCCESSFULLY
+            );
+        } else {
+            return responseObject(
+                req,
+                res,
+                "",
+                responseCode.INTERNAL_SERVER_ERROR,
+                true,
+                responseMessage.SOMETHING_WENT_WRONG
+            );
+        }
+    } catch (err) {
+        return responseObject(
+            req,
+            res,
+            "",
+            responseCode.INTERNAL_SERVER_ERROR,
+            false,
+            responseMessage.SOMETHING_WENT_WRONG
+        );
+    }
+}
 
 module.exports = {
     handlerGetCarer,
@@ -393,5 +519,7 @@ module.exports = {
     handlerDeleteCarer,
     handlerUpdateCarer,
     handlerGetCarerById,
-    handlerCarerLogin
+    handlerCarerLogin,
+    handlerGetCarerVideo,
+    handlerCreateVideo
 }

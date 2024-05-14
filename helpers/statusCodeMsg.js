@@ -23,5 +23,9 @@ module.exports = {
         CLIENT_NOT_FOUND:"Client not found",
         CLIENT_UPDATED_SUCCESSFULLY:"Client updated successfully",
         CLIENT_DELETED_SUCCESSFULLY:"Client deleted successfully",
+        VIDEO_FOUND:"Videos retrieved successfully",
+        PLEASE_UPLOAD_THE_VIDEO:"Please upload an video",
+        NO_VIDEOS_FOUND:"No videos found",
+        VIDEOS_UPLOADED_SUCCESSFULLY:"Video uploaded successfully",
     }
 };

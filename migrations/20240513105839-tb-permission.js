@@ -15,19 +15,17 @@ exports.setup = function(options, seedLink) {
 };
 
 exports.up = function(db, callback) {
-  db.createTable('carerlogin', {
+  db.createTable('permissions', {
     id: { type: 'int', primaryKey: true, autoIncrement: true },
-    email: { type: 'string', length: 255, notNull: true },
-    password: { type: 'string', length: 255, notNull: true },
-    devicetype: { type: 'string', length: 255, notNull: true },
-    devicetoken: { type: 'string', length: 255, allowNull: true },
+    name: { type: 'string', length: 255, notNull: true },
+    description: { type: 'string', length: 255, notNull: true },
     created_at: { type: 'timestamp', defaultValue: new String('CURRENT_TIMESTAMP') },
     updated_at: { type: 'timestamp', defaultValue: new String('CURRENT_TIMESTAMP') }
   }, callback);
 };
 
 exports.down = function(db, callback) {
-  db.dropTable('carerlogin', callback);
+  db.dropTable('permissions', callback);
 };
 
 exports._meta = {
