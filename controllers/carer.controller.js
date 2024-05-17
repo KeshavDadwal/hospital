@@ -401,7 +401,7 @@ async function handlerGetCarerVideo(req, res) {
         const offset = (page - 1) * pageSize;
 
         const videosData = await Video.findAndCountAll({
-            attributes: ['id', 'title', 'views', 'likes','video_path','created_at', 'updated_at'],
+            attributes: ['id', 'title', 'views', 'likes','video_path','carer_id','created_at', 'updated_at'],
             where: {
                 client_id: client
             },
@@ -437,13 +437,12 @@ async function handlerGetCarerVideo(req, res) {
                 req,
                 res,
                 "",
-                responseCode.NOT_FOUND,
+                responseCode.OK,
                 false,
                 responseMessage.NO_VIDEOS_FOUND
             );
         }
     } catch (err) {
-        console.log("errrrrr======",err)
         return responseObject(
             req,
             res,
@@ -459,7 +458,7 @@ async function handlerGetCarerVideo(req, res) {
 
 async function handlerCreateVideo(req, res) {
     try {
-        console.log("hlo")
+        
         if (!req.file) {
             return responseObject(
                 req,
@@ -470,15 +469,16 @@ async function handlerCreateVideo(req, res) {
                 responseMessage.PLEASE_UPLOAD_THE_VIDEO
             );
         }
-        
-        const { client_id, likes, views } = req.body;
-        const videoName = req.file.originalname;
-        const videoPath = await uploadImage(req.file.path, videoName,"videos");
+
+        const { carer_id} = req.decodedToken;
+        const { client_id,title } = req.body;
+        const videoPath = await uploadImage(req.file.path, req.file.originalname,"videos");
         const newVideo = await Video.create({
             client_id,
-            likes,
-            views,
-            title: videoName, 
+            carer_id,
+            likes:0,
+            views:0,
+            title, 
             video_path: videoPath
         });
 

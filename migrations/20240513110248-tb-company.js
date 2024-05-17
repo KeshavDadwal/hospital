@@ -1,7 +1,5 @@
 'use strict';
 
-var bcrypt = require('bcrypt');
-
 var dbm;
 var type;
 var seed;

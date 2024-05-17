@@ -15,18 +15,16 @@ exports.setup = function(options, seedLink) {
 };
 
 exports.up = function(db, callback) {
-  db.createTable('videos', {
+  db.createTable('carerVideo', {
     id: { type: 'int', primaryKey: true, autoIncrement: true },
-    title: { type: 'string', length: 255, notNull: true },
-    video_path: { type: 'string', length: 255, notNull: true },
-    views: { type: 'int', length: 255, notNull: true },
-    likes: { type: 'int', length: 255, notNull: true },
-    client_id: {
+    is_seen: { type: 'boolean', notNull: true, defaultValue: false },
+    is_like: { type: 'boolean', notNull: true, defaultValue: false },
+    video_id: {
       type: 'int',
       notNull: true,
       foreignKey: {
-        name: 'videos_clients_fk',
-        table: 'client',
+        name: 'carerVideo_video_fk',
+        table: 'videos', 
         rules: {
           onDelete: 'CASCADE',
           onUpdate: 'CASCADE'
@@ -38,7 +36,7 @@ exports.up = function(db, callback) {
       type: 'int',
       notNull: true,
       foreignKey: {
-        name: 'videos_carer_fk',
+        name: 'carerVideo_carer_fk',
         table: 'carer',
         rules: {
           onDelete: 'CASCADE',
@@ -53,7 +51,7 @@ exports.up = function(db, callback) {
 };
 
 exports.down = function(db, callback) {
-  db.dropTable('videos', callback);
+  db.dropTable('carerVideo', callback);
 };
 
 exports._meta = {

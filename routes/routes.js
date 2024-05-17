@@ -7,6 +7,8 @@ const RoleController = require("../controllers/role.controller");
 const PermissionController = require("../controllers/permission.controller");
 const RolePermissionController = require("../controllers/role_permission.controller");
 const CarerController = require("../controllers/carer.controller");
+const ProgramCareController = require("../controllers/programCare.controller");
+const CarerVideoCountController = require("../controllers/carerVideo.controller");
 const MobileClientController = require("../controllers/mobile.client.controller");
 const CompanyController = require("../controllers/company.controller");
 const verifyToken = require('../helpers/middleware');
@@ -45,11 +47,14 @@ router.get('/carer', CarerController.handlerGetCarer);
 router.put('/carer/:id',multerMiddleware.single('picture'),CarerController.handlerUpdateCarer);
 router.delete('/carer/:id', CarerController.handlerDeleteCarer);
 
+router.get('/programcare', ProgramCareController.handlerGetProgramCare);
+router.post('/programcare', ProgramCareController.handlerCreateProgramCare);
 
 ////////////////////////////////////////// Mobile
 router.post('/carerlogin', CarerController.handlerCarerLogin);
 router.get('/getcarer', MobileClientController.handlerGetMobileClient);
 router.get('/video', CarerController.handlerGetCarerVideo);
+router.post('/videocount', CarerVideoCountController.handlerUpdateVideoCount);
 router.post('/uploadvideo', multerMiddleware.single('video'),CarerController.handlerCreateVideo);
 
 

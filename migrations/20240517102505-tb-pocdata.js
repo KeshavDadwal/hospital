@@ -1,5 +1,7 @@
 'use strict';
 
+const Company = require("../models/company");
+
 var dbm;
 var type;
 var seed;
@@ -15,17 +17,13 @@ exports.setup = function(options, seedLink) {
 };
 
 exports.up = function(db, callback) {
-  db.createTable('videos', {
+  db.createTable('programCaredata', {
     id: { type: 'int', primaryKey: true, autoIncrement: true },
-    title: { type: 'string', length: 255, notNull: true },
-    video_path: { type: 'string', length: 255, notNull: true },
-    views: { type: 'int', length: 255, notNull: true },
-    likes: { type: 'int', length: 255, notNull: true },
     client_id: {
       type: 'int',
       notNull: true,
       foreignKey: {
-        name: 'videos_clients_fk',
+        name: 'programCaredata_client_fk',
         table: 'client',
         rules: {
           onDelete: 'CASCADE',
@@ -34,12 +32,12 @@ exports.up = function(db, callback) {
         mapping: 'id'
       }
     },
-    carer_id: {
+    company_id: {
       type: 'int',
       notNull: true,
       foreignKey: {
-        name: 'videos_carer_fk',
-        table: 'carer',
+        name: 'programCaredata_company_fk',
+        table: 'company',
         rules: {
           onDelete: 'CASCADE',
           onUpdate: 'CASCADE'
@@ -47,13 +45,28 @@ exports.up = function(db, callback) {
         mapping: 'id'
       }
     },
+    program_care_id: {
+      type: 'int',
+      notNull: true,
+      foreignKey: {
+        name: 'programCaredata_program_care_fk',
+        table: 'programCare',
+        rules: {
+          onDelete: 'CASCADE',
+          onUpdate: 'CASCADE'
+        },
+        mapping: 'id'
+      }
+    },
+    description: { type: 'string', length: 255, notNull: true },
     created_at: { type: 'timestamp', defaultValue: new String('CURRENT_TIMESTAMP') },
     updated_at: { type: 'timestamp', defaultValue: new String('CURRENT_TIMESTAMP') }
   }, callback);
 };
 
+
 exports.down = function(db, callback) {
-  db.dropTable('videos', callback);
+  db.dropTable('programCaredata', callback);
 };
 
 exports._meta = {

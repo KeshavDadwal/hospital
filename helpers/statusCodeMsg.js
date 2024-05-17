@@ -9,6 +9,7 @@ module.exports = {
         UNABLE_TO_FIND_THE_COMPANY:"Sorry unable to find this company",
         PLEASE_UPLOAD_THE_IMAGE:"Please upload an image",
         CLIENT_CREATED_SUCCESSFULLY:"Client created successfully",
+        PROGRAM_CARE_CREATED_SUCCESSFULLY:"Program Care created successfully",
         UNABLE_TO_CREATE_THE_COMPANY:"Sorry unable to create the company",
         NO_DATA_FOUND:"No data found",
         CARER_CREATED_SUCCESSFULLY:"Carer created successfully",
@@ -27,5 +28,7 @@ module.exports = {
         PLEASE_UPLOAD_THE_VIDEO:"Please upload an video",
         NO_VIDEOS_FOUND:"No videos found",
         VIDEOS_UPLOADED_SUCCESSFULLY:"Video uploaded successfully",
+        VIDEO_COUNT_UPDATED_SUCCESSFULLY:"Video count updated successfully",
+        PROGRAM_CARE_RETRIVED_SUCCESSFULLY:"Program Care retrived successfully",
     }
 };

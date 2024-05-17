@@ -1,12 +1,24 @@
 const { DataTypes } = require('sequelize');
 const { createSequelizeInstance } = require('../connection');
+const Company = require('./company'); 
 
 const sequelize = createSequelizeInstance();
 
-const Carer = sequelize.define('Carer',{
+const Carer = sequelize.define('Carer', {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
     company_id: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        references: {
+            model: Company, 
+            key: 'id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
     },
     picture: {
         type: DataTypes.STRING,
@@ -22,25 +34,30 @@ const Carer = sequelize.define('Carer',{
     },
     email: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
+        unique: true
     },
     password: {
         type: DataTypes.STRING,
         allowNull: false
     },
     joining_date: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY, 
         allowNull: false
     },
-    blocked:{
+    blocked: {
         type: DataTypes.BOOLEAN,
+        defaultValue: false, 
         allowNull: true
-    },
+    }
 }, {
-    tableName: 'carer', 
+    tableName: 'carer',
     timestamps: true, 
-    createdAt: 'created_at', 
-    updatedAt: 'updated_at' 
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
 });
+
+Company.hasMany(Carer, { foreignKey: 'company_id' });
+Carer.belongsTo(Company, { foreignKey: 'company_id' });
 
 module.exports = Carer;
