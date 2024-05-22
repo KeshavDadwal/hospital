@@ -2,9 +2,9 @@
     "dev": {
       "driver": "mysql", 
       "host": "localhost",
-      "user": "root",
+      "user": "myuser",
       "password": "Qwerty@12",
-      "database": "hospital",
+      "database": "mydatabase",
       "multipleStatements": true
     }
   }

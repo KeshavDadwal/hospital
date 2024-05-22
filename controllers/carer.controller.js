@@ -98,7 +98,6 @@ async function handlerCreateCarer(req, res) {
     }
 }
 
-
 async function handlerGetCarer(req, res) {
     try {
         const { company_id} = req.decodedToken;
@@ -205,7 +204,6 @@ async function handlerGetCarerById(req,res) {
     }
 }
 
-
 async function handlerUpdateCarer(req, res) {
     try {
 
@@ -269,7 +267,6 @@ async function handlerUpdateCarer(req, res) {
     }
 }
 
-
 async function handlerDeleteCarer(req, res) {
     try {
         const carerId = req.params.id; 
@@ -313,7 +310,6 @@ async function handlerDeleteCarer(req, res) {
         );
     }
 }
-
 
 async function handlerCarerLogin(req, res) {
     try {
@@ -386,7 +382,6 @@ async function handlerCarerLogin(req, res) {
     }
 }
 
-
 async function handlerGetCarerVideo(req, res) {
     try {
         const { client } = req.query;
@@ -454,8 +449,6 @@ async function handlerGetCarerVideo(req, res) {
     }
 }
 
-
-
 async function handlerCreateVideo(req, res) {
     try {
         
@@ -513,6 +506,95 @@ async function handlerCreateVideo(req, res) {
     }
 }
 
+async function handlerUpdateVideo(req, res) {
+    try {
+        const videoId = req.params.id; 
+        const video = await Video.findOne({
+            where: {
+              id: videoId,
+            }
+          });
+        
+        const {title} = req.body;
+        
+
+        if (!video) {
+            return responseObject(
+                req,
+                res,
+                "",
+                responseCode.NOT_FOUND,
+                false,
+                responseMessage.VIDEO_NOT_FOUND
+            );
+        }
+
+        await video.update({
+            title
+        });
+
+        return responseObject(
+            req,
+            res,
+            video,
+            responseCode.OK,
+            true,
+            responseMessage.VIDEO_UPDATED_SUCCESSFULLY
+        );
+    } catch (err) {
+        return responseObject(
+            req,
+            res,
+            "",
+            responseCode.INTERNAL_SERVER_ERROR,
+            false,
+           responseMessage.SOMETHING_WENT_WRONG
+        );
+    }
+}
+
+async function handlerDeleteClientVideo(req, res) {
+    try {
+        const videoId = req.params.id; 
+        const video = await Video.findOne({
+            where: {
+              id: videoId,
+            }
+          });
+
+        if (!video) {
+            return responseObject(
+                req,
+                res,
+                "",
+                responseCode.NOT_FOUND,
+                false,
+                responseMessage.VIDEO_NOT_FOUND
+            );
+        }
+
+        await video.destroy();
+
+        return responseObject(
+            req,
+            res,
+            "",
+            responseCode.OK,
+            true,
+            responseMessage.VIDEO_DELETED_SUCCESSFULLY
+        );
+    } catch (err) {
+        return responseObject(
+            req,
+            res,
+            "",
+            responseCode.INTERNAL_SERVER_ERROR,
+            false,
+            responseMessage.SOMETHING_WENT_WRONG
+        );
+    }
+}
+
 module.exports = {
     handlerGetCarer,
     handlerCreateCarer,
@@ -521,5 +603,7 @@ module.exports = {
     handlerGetCarerById,
     handlerCarerLogin,
     handlerGetCarerVideo,
-    handlerCreateVideo
+    handlerCreateVideo,
+    handlerDeleteClientVideo,
+    handlerUpdateVideo
 }

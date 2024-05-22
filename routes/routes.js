@@ -47,6 +47,10 @@ router.get('/carer', CarerController.handlerGetCarer);
 router.put('/carer/:id',multerMiddleware.single('picture'),CarerController.handlerUpdateCarer);
 router.delete('/carer/:id', CarerController.handlerDeleteCarer);
 
+router.delete('/video/:id', CarerController.handlerDeleteClientVideo);
+router.put('/video/:id', CarerController.handlerUpdateVideo);
+
+
 router.get('/programcare', ProgramCareController.handlerGetProgramCare);
 router.post('/programcare', ProgramCareController.handlerCreateProgramCare);
 
@@ -56,6 +60,7 @@ router.get('/getcarer', MobileClientController.handlerGetMobileClient);
 router.get('/video', CarerController.handlerGetCarerVideo);
 router.post('/videocount', CarerVideoCountController.handlerUpdateVideoCount);
 router.post('/uploadvideo', multerMiddleware.single('video'),CarerController.handlerCreateVideo);
+
 
 
 module.exports = router;
