@@ -33,7 +33,6 @@ async function handlerGetProgramCare(req, res) {
             );
         }
     } catch (err) {
-        console.log("errr====",err)
         return responseObject(
             req,
             res,
@@ -104,7 +103,89 @@ async function handlerCreateProgramCare(req, res) {
     }
 }
 
+async function handlerGetPOCBYID(req, res) {
+    try {
+        const { client } = req.query;
+        if (!client) {
+            return res.status(400).json({
+                success: false,
+                message: "client_id is required"
+            });
+        }
+
+        const pocValues = [1, 2, 3, 4];
+        const pocDataPromises = pocValues.map(async poc => {
+            const pocData = await ProgramCareData.findAndCountAll({
+                attributes: [
+                    'id',
+                    'client_id',
+                    'company_id',
+                    'program_care_id',
+                    'description',
+                    'created_at',
+                    'updated_at'
+                ],
+                where: {
+                    client_id: client,
+                    program_care_id: poc
+                },
+                include: [
+                    {
+                        model: ProgramCare,
+                        attributes: ['title'],
+                        required: false
+                    }
+                ],
+                order: [['created_at', 'DESC']]
+            });
+
+            return pocData;
+        });
+
+        const pocDatas = await Promise.all(pocDataPromises);
+
+        let totalCount = 0;
+        let allRows = [];
+        pocDatas.forEach(pocData => {
+            totalCount += pocData.count;
+            allRows = allRows.concat(pocData.rows);
+        });
+
+        if (totalCount > 0) {
+            return responseObject(
+                req,
+                res,
+                allRows,
+                responseCode.OK,
+                false,
+                responseMessage.POC_FOUND
+            );
+        } else {
+            return responseObject(
+                req,
+                res,
+                "",
+                responseCode.OK,
+                false,
+                responseMessage.NO_DATA_FOUND
+            );
+        }
+    } catch (err) {
+        console.error(err);
+        return responseObject(
+            req,
+            res,
+            "",
+            responseCode.BAD_REQUEST,
+            false,
+            responseMessage.SOMETHING_WENT_WRONG
+        );
+    }
+}
+
+
 module.exports={
     handlerGetProgramCare,
-    handlerCreateProgramCare
+    handlerCreateProgramCare,
+    handlerGetPOCBYID
 }

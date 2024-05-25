@@ -4,7 +4,7 @@
       "host": "localhost",
       "user": "myuser",
       "password": "Qwerty@12",
-      "database": "mydatabase",
+      "database": "hospital",
       "multipleStatements": true
     }
   }
