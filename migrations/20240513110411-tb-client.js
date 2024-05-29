@@ -13,19 +13,34 @@ exports.setup = function(options, seedLink) {
   type = dbm.dataType;
   seed = seedLink;
 };
-
 exports.up = function(db, callback) {
-  db.createTable('permission', {
+  db.createTable('client', {
     id: { type: 'int', primaryKey: true, autoIncrement: true },
-    name: { type: 'string', length: 255, notNull: true },
-    description: { type: 'string', length: 255, notNull: true },
+    company_id: {
+      type: 'int',
+      notNull: true,
+      foreignKey: {
+        name: 'client_company_fk',
+        table: 'company',
+        rules: {
+          onDelete: 'CASCADE',
+          onUpdate: 'CASCADE'
+        },
+        mapping: 'id'
+      }
+    },
+    picture: { type: 'string', length: 255, notNull: true },
+    firstname: { type: 'string', length: 255, notNull: true },
+    lastname: { type: 'string', length: 255, notNull: true },
+    email: { type: 'string', length: 255, notNull: true, unique: true },
+    joining_date: { type: 'date', notNull: true },
     created_at: { type: 'timestamp', defaultValue: new String('CURRENT_TIMESTAMP') },
     updated_at: { type: 'timestamp', defaultValue: new String('CURRENT_TIMESTAMP') }
   }, callback);
 };
 
 exports.down = function(db, callback) {
-  db.dropTable('permission', callback);
+  db.dropTable('client', callback);
 };
 
 exports._meta = {

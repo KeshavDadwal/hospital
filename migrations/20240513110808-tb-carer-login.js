@@ -1,3 +1,8 @@
+
+
+
+
+
 'use strict';
 
 var dbm;
@@ -15,19 +20,25 @@ exports.setup = function(options, seedLink) {
 };
 
 exports.up = function(db, callback) {
-  db.createTable('role', {
+  db.createTable('carerlogin', {
     id: { type: 'int', primaryKey: true, autoIncrement: true },
-    name: { type: 'string', length: 255, notNull: true },
-    description: { type: 'string', length: 255, notNull: true },
+    email: { type: 'string', length: 255, notNull: true },
+    password: { type: 'string', length: 255, notNull: true },
+    devicetype: { type: 'string', length: 255, notNull: true },
+    devicetoken: { type: 'string', length: 255, allowNull: true },
     created_at: { type: 'timestamp', defaultValue: new String('CURRENT_TIMESTAMP') },
     updated_at: { type: 'timestamp', defaultValue: new String('CURRENT_TIMESTAMP') }
   }, callback);
 };
 
 exports.down = function(db, callback) {
-  db.dropTable('role', callback);
+  db.dropTable('carerlogin', callback);
 };
 
 exports._meta = {
   "version": 1
 };
+
+
+
+

@@ -3,12 +3,15 @@ const {responseCode} = require("../helpers/statusCode");
 const {responseMessage} = require("../helpers/statusCodeMsg");
 const {sendEmail} = require("../helpers/mail");
 const {GenerateRandomString} = require('../helpers/randomString');
+const extractFirstFrame = require("../helpers/videoframe")
 const bcrypt = require('bcrypt');
 const Carer  = require('../models/carer');
+const Video  = require('../models/video');
 const CarerLogin  = require('../models/carerLogin');
 const jwt = require('jsonwebtoken');
 const uploadImage = require('../helpers/s3bucket');
 require('dotenv').config(); 
+const path = require('path');
 
 
 async function handlerCreateCarer(req, res) {
@@ -96,7 +99,6 @@ async function handlerCreateCarer(req, res) {
         }
     }
 }
-
 
 async function handlerGetCarer(req, res) {
     try {
@@ -204,7 +206,6 @@ async function handlerGetCarerById(req,res) {
     }
 }
 
-
 async function handlerUpdateCarer(req, res) {
     try {
 
@@ -268,7 +269,6 @@ async function handlerUpdateCarer(req, res) {
     }
 }
 
-
 async function handlerDeleteCarer(req, res) {
     try {
         const carerId = req.params.id; 
@@ -312,7 +312,6 @@ async function handlerDeleteCarer(req, res) {
         );
     }
 }
-
 
 async function handlerCarerLogin(req, res) {
     try {
@@ -385,7 +384,228 @@ async function handlerCarerLogin(req, res) {
     }
 }
 
+async function handlerGetCarerVideo(req, res) {
+    try {
+        const { client } = req.query;
+        if (!client) {
+            return res.status(400).json({
+                success: false,
+                message: "client_id is required"
+            });
+        }
+        const page = req.query.page ? parseInt(req.query.page) : 1;
+        const pageSize = req.query.pageSize ? parseInt(req.query.pageSize) : 10;
+        const offset = (page - 1) * pageSize;
 
+        const videosData = await Video.findAndCountAll({
+            attributes: ['id', 'title', 'views', 'likes','video_path','video_frame','carer_id','created_at', 'updated_at'],
+            where: {
+                client_id: client
+            },
+            limit: pageSize,
+            offset: offset,
+            order: [['created_at', 'DESC']]
+        });
+
+        const totalCount = videosData.count;
+        const videos = videosData.rows;
+
+        videos.forEach(video => {
+            video.video_frame = process.env.BUCKET_URL+"/" + video.video_frame;
+            video.video_path = process.env.BUCKET_URL+"/" + video.video_path;
+        });
+
+        const totalPages = Math.ceil(totalCount / pageSize);
+
+        if (totalCount > 0) {
+            return paginationResponseObject(
+                req,
+                res,
+                videos,
+                totalPages,
+                page,
+                pageSize,
+                responseCode.OK,
+                true,
+                ""
+            );
+        } else {
+            return responseObject(
+                req,
+                res,
+                "",
+                responseCode.OK,
+                false,
+                responseMessage.NO_VIDEOS_FOUND
+            );
+        }
+    } catch (err) {
+        return responseObject(
+            req,
+            res,
+            "",
+            responseCode.BAD_REQUEST,
+            false,
+            responseMessage.SOMETHING_WENT_WRONG
+        );
+    }
+}
+
+
+async function handlerCreateVideo(req, res) {
+    try {
+        if (!req.file) {
+            return responseObject(
+                req,
+                res,
+                "",
+                responseCode.BAD_REQUEST,
+                false,
+                responseMessage.PLEASE_UPLOAD_THE_VIDEO
+            );
+        }
+
+        const { carer_id, company_id } = req.decodedToken;
+        const { client_id, title } = req.body;
+
+        const videoPath = await uploadImage(req.file.path, req.file.originalname, "videos");
+
+        const frameDetails = await extractFirstFrame(req.file.path, ".");
+        const frameOutputPath = frameDetails.path;
+        const frameFileName = frameDetails.name;
+
+        const uploadedFramePath = await uploadImage(frameOutputPath, frameFileName, "videos_frame");
+
+        const newVideo = await Video.create({
+            client_id,
+            carer_id,
+            company_id,
+            likes: 0,
+            views: 0,
+            title,
+            video_path: videoPath,
+            video_frame: uploadedFramePath  
+        });
+
+        if (newVideo) {
+            return responseObject(
+                req,
+                res,
+                newVideo,
+                responseCode.OK,
+                true,
+                responseMessage.VIDEOS_UPLOADED_SUCCESSFULLY
+            );
+        } else {
+            return responseObject(
+                req,
+                res,
+                "",
+                responseCode.INTERNAL_SERVER_ERROR,
+                true,
+                responseMessage.SOMETHING_WENT_WRONG
+            );
+        }
+    } catch (err) {
+        return responseObject(
+            req,
+            res,
+            "",
+            responseCode.INTERNAL_SERVER_ERROR,
+            false,
+            responseMessage.SOMETHING_WENT_WRONG
+        );
+    }
+}
+
+async function handlerUpdateVideo(req, res) {
+    try {
+        const videoId = req.params.id; 
+        const video = await Video.findOne({
+            where: {
+              id: videoId,
+            }
+          });
+        
+        const {title} = req.body;
+        
+
+        if (!video) {
+            return responseObject(
+                req,
+                res,
+                "",
+                responseCode.NOT_FOUND,
+                false,
+                responseMessage.VIDEO_NOT_FOUND
+            );
+        }
+
+        await video.update({
+            title
+        });
+
+        return responseObject(
+            req,
+            res,
+            video,
+            responseCode.OK,
+            true,
+            responseMessage.VIDEO_UPDATED_SUCCESSFULLY
+        );
+    } catch (err) {
+        return responseObject(
+            req,
+            res,
+            "",
+            responseCode.INTERNAL_SERVER_ERROR,
+            false,
+           responseMessage.SOMETHING_WENT_WRONG
+        );
+    }
+}
+
+async function handlerDeleteClientVideo(req, res) {
+    try {
+        const videoId = req.params.id; 
+        const video = await Video.findOne({
+            where: {
+              id: videoId,
+            }
+          });
+
+        if (!video) {
+            return responseObject(
+                req,
+                res,
+                "",
+                responseCode.NOT_FOUND,
+                false,
+                responseMessage.VIDEO_NOT_FOUND
+            );
+        }
+
+        await video.destroy();
+
+        return responseObject(
+            req,
+            res,
+            "",
+            responseCode.OK,
+            true,
+            responseMessage.VIDEO_DELETED_SUCCESSFULLY
+        );
+    } catch (err) {
+        return responseObject(
+            req,
+            res,
+            "",
+            responseCode.INTERNAL_SERVER_ERROR,
+            false,
+            responseMessage.SOMETHING_WENT_WRONG
+        );
+    }
+}
 
 module.exports = {
     handlerGetCarer,
@@ -393,5 +613,9 @@ module.exports = {
     handlerDeleteCarer,
     handlerUpdateCarer,
     handlerGetCarerById,
-    handlerCarerLogin
+    handlerCarerLogin,
+    handlerGetCarerVideo,
+    handlerCreateVideo,
+    handlerDeleteClientVideo,
+    handlerUpdateVideo
 }

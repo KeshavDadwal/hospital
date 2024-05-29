@@ -9,7 +9,6 @@ require('dotenv').config();
 
 async function handlerGetMobileClient(req, res) {
     try {
-
         const { carer_id} = req.decodedToken;
         
             const companyData = await Carer.findAndCountAll({ 
@@ -19,8 +18,6 @@ async function handlerGetMobileClient(req, res) {
             });
 
         const companyId = companyData.rows.length > 0 ? companyData.rows[0].company_id : null;
-    
-        console.log("companyId id ",companyId)
         const page = req.query.page ? parseInt(req.query.page) : 1;
         const pageSize = req.query.pageSize ? parseInt(req.query.pageSize) : 10;
         const offset = (page - 1) * pageSize;
@@ -67,7 +64,6 @@ async function handlerGetMobileClient(req, res) {
             );
         }
     } catch (err) {
-        console.log("daataayayya=====",err)
         return responseObject(
             req,
             res,

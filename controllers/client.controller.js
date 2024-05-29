@@ -75,7 +75,6 @@ async function handlerCreateClient(req, res) {
 
 async function handlerGetClient(req, res) {
     try {
-console.log("datatattatata======")
         const { company_id} = req.decodedToken;
         const page = req.query.page ? parseInt(req.query.page) : 1;
         const pageSize = req.query.pageSize ? parseInt(req.query.pageSize) : 10;
@@ -123,7 +122,6 @@ console.log("datatattatata======")
             );
         }
     } catch (err) {
-        console.log("datatattatata======qweqwe",err)
         return responseObject(
             req,
             res,
