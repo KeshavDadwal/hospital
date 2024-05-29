@@ -30,6 +30,7 @@ module.exports = {
         VIDEO_FOUND:"Videos retrieved successfully",
         PLEASE_UPLOAD_THE_VIDEO:"Please upload an video",
         NO_VIDEOS_FOUND:"No videos found",
+        POC_FOUND:"program of care retrived successfully",
         VIDEOS_UPLOADED_SUCCESSFULLY:"Video uploaded successfully",
         VIDEO_COUNT_UPDATED_SUCCESSFULLY:"Video count updated successfully",
         PROGRAM_CARE_RETRIVED_SUCCESSFULLY:"Program Care retrived successfully",

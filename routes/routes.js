@@ -49,6 +49,7 @@ router.delete('/carer/:id', CarerController.handlerDeleteCarer);
 
 router.delete('/video/:id', CarerController.handlerDeleteClientVideo);
 router.put('/video/:id', CarerController.handlerUpdateVideo);
+router.get('/procare', ProgramCareController.handlerGetPOCBYID);
 
 
 router.get('/programcare', ProgramCareController.handlerGetProgramCare);

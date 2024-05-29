@@ -19,6 +19,7 @@ exports.up = function(db, callback) {
     id: { type: 'int', primaryKey: true, autoIncrement: true },
     title: { type: 'string', length: 255, notNull: true },
     video_path: { type: 'string', length: 255, notNull: true },
+    video_frame: { type: 'string', length: 255, notNull: true },
     views: { type: 'int', length: 255, notNull: true },
     likes: { type: 'int', length: 255, notNull: true },
     client_id: {
@@ -36,10 +37,23 @@ exports.up = function(db, callback) {
     },
     carer_id: {
       type: 'int',
-      notNull: true,
+      notNull: false,
       foreignKey: {
         name: 'videos_carer_fk',
         table: 'carer',
+        rules: {
+          onDelete: 'CASCADE',
+          onUpdate: 'CASCADE'
+        },
+        mapping: 'id'
+      }
+    },
+    company_id: {
+      type: 'int',
+      notNull: false,
+      foreignKey: {
+        name: 'videos_company_fk',
+        table: 'company',
         rules: {
           onDelete: 'CASCADE',
           onUpdate: 'CASCADE'

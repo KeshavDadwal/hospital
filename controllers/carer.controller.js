@@ -3,6 +3,7 @@ const {responseCode} = require("../helpers/statusCode");
 const {responseMessage} = require("../helpers/statusCodeMsg");
 const {sendEmail} = require("../helpers/mail");
 const {GenerateRandomString} = require('../helpers/randomString');
+const extractFirstFrame = require("../helpers/videoframe")
 const bcrypt = require('bcrypt');
 const Carer  = require('../models/carer');
 const Video  = require('../models/video');
@@ -10,6 +11,7 @@ const CarerLogin  = require('../models/carerLogin');
 const jwt = require('jsonwebtoken');
 const uploadImage = require('../helpers/s3bucket');
 require('dotenv').config(); 
+const path = require('path');
 
 
 async function handlerCreateCarer(req, res) {
@@ -396,7 +398,7 @@ async function handlerGetCarerVideo(req, res) {
         const offset = (page - 1) * pageSize;
 
         const videosData = await Video.findAndCountAll({
-            attributes: ['id', 'title', 'views', 'likes','video_path','carer_id','created_at', 'updated_at'],
+            attributes: ['id', 'title', 'views', 'likes','video_path','video_frame','carer_id','created_at', 'updated_at'],
             where: {
                 client_id: client
             },
@@ -409,7 +411,7 @@ async function handlerGetCarerVideo(req, res) {
         const videos = videosData.rows;
 
         videos.forEach(video => {
-    
+            video.video_frame = process.env.BUCKET_URL+"/" + video.video_frame;
             video.video_path = process.env.BUCKET_URL+"/" + video.video_path;
         });
 
@@ -449,9 +451,9 @@ async function handlerGetCarerVideo(req, res) {
     }
 }
 
+
 async function handlerCreateVideo(req, res) {
     try {
-        
         if (!req.file) {
             return responseObject(
                 req,
@@ -463,16 +465,26 @@ async function handlerCreateVideo(req, res) {
             );
         }
 
-        const { carer_id} = req.decodedToken;
-        const { client_id,title } = req.body;
-        const videoPath = await uploadImage(req.file.path, req.file.originalname,"videos");
+        const { carer_id, company_id } = req.decodedToken;
+        const { client_id, title } = req.body;
+
+        const videoPath = await uploadImage(req.file.path, req.file.originalname, "videos");
+
+        const frameDetails = await extractFirstFrame(req.file.path, ".");
+        const frameOutputPath = frameDetails.path;
+        const frameFileName = frameDetails.name;
+
+        const uploadedFramePath = await uploadImage(frameOutputPath, frameFileName, "videos_frame");
+
         const newVideo = await Video.create({
             client_id,
             carer_id,
-            likes:0,
-            views:0,
-            title, 
-            video_path: videoPath
+            company_id,
+            likes: 0,
+            views: 0,
+            title,
+            video_path: videoPath,
+            video_frame: uploadedFramePath  
         });
 
         if (newVideo) {

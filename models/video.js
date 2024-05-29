@@ -1,7 +1,8 @@
 const { DataTypes } = require('sequelize');
 const { createSequelizeInstance } = require('../connection');
 const Client = require('./client');  
-const Carer = require('./carer');    
+const Carer = require('./carer');
+const Company = require('./company');
 
 const sequelize = createSequelizeInstance();
 
@@ -16,6 +17,10 @@ const Video = sequelize.define('Video', {
         allowNull: false
     },
     video_path: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    video_frame: {
         type: DataTypes.STRING,
         allowNull: false
     },
@@ -39,9 +44,19 @@ const Video = sequelize.define('Video', {
     },
     carer_id: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
         references: {
             model: Carer,
+            key: 'id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
+    },
+    company_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: Company,
             key: 'id'
         },
         onUpdate: 'CASCADE',
