@@ -451,6 +451,63 @@ async function handlerGetCarerVideo(req, res) {
     }
 }
 
+async function handlerGetCarerVideoListing(req, res) {
+    try {
+        const { client } = req.query;
+        if (!client) {
+            return res.status(400).json({
+                success: false,
+                message: "client_id is required"
+            });
+        }
+
+        const videosData = await Video.findAndCountAll({
+            attributes: ['id', 'title', 'views', 'likes','video_path','video_frame','carer_id','created_at', 'updated_at'],
+            where: {
+                client_id: client
+            },
+            order: [['created_at', 'DESC']]
+        });
+
+        const totalCount = videosData.count;
+        const videos = videosData.rows;
+
+        videos.forEach(video => {
+            video.video_frame = process.env.BUCKET_URL+"/" + video.video_frame;
+            video.video_path = process.env.BUCKET_URL+"/" + video.video_path;
+        });
+
+        if (totalCount > 0) {
+            return responseObject(
+                req,
+                res,
+                videos,
+                responseCode.OK,
+                false,
+                ""
+            );
+        } else {
+            return responseObject(
+                req,
+                res,
+                "",
+                responseCode.OK,
+                false,
+                responseMessage.NO_VIDEOS_FOUND
+            );
+        }
+    } catch (err) {
+        return responseObject(
+            req,
+            res,
+            "",
+            responseCode.BAD_REQUEST,
+            false,
+            responseMessage.SOMETHING_WENT_WRONG
+        );
+    }
+}
+
 
 async function handlerCreateVideo(req, res) {
     try {
@@ -617,5 +674,6 @@ module.exports = {
     handlerGetCarerVideo,
     handlerCreateVideo,
     handlerDeleteClientVideo,
-    handlerUpdateVideo
+    handlerUpdateVideo,
+    handlerGetCarerVideoListing
 }
