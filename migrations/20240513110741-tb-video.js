@@ -22,6 +22,7 @@ exports.up = function(db, callback) {
     video_frame: { type: 'string', length: 255, notNull: true },
     views: { type: 'int', length: 255, notNull: true },
     likes: { type: 'int', length: 255, notNull: true },
+    is_attached: { type: 'boolean', defaultValue: false },
     client_id: {
       type: 'int',
       notNull: true,
@@ -61,6 +62,7 @@ exports.up = function(db, callback) {
         mapping: 'id'
       }
     },
+
     created_at: { type: 'timestamp', defaultValue: new String('CURRENT_TIMESTAMP') },
     updated_at: { type: 'timestamp', defaultValue: new String('CURRENT_TIMESTAMP') }
   }, callback);

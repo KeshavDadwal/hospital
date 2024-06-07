@@ -108,7 +108,7 @@ async function handlerUpdateProgramCare(req, res) {
     try {
         const { company_id } = req.decodedToken;
         const pocId = req.params.id; 
-        const { video_id } = req.body;
+        const { video_id,description, } = req.body;
        
         const pocData = await ProgramCareData.findOne({
             where: {
@@ -128,9 +128,13 @@ async function handlerUpdateProgramCare(req, res) {
             );
         }
 
+        const newdescription = description === "" ? pocData.dataValues.description:description
+        const newVideoId = video_id == null ? pocData.dataValues.video_id:video_id
+
         await pocData.update({
             company_id,
-            video_id,
+            video_id:newVideoId,
+            description:newdescription
         });
 
         return responseObject(
@@ -245,6 +249,7 @@ async function handlerGetPOCBYID(req, res) {
         );
     }
 }
+
 
 
 module.exports={

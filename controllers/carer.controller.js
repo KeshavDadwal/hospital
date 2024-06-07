@@ -398,7 +398,7 @@ async function handlerGetCarerVideo(req, res) {
         const offset = (page - 1) * pageSize;
 
         const videosData = await Video.findAndCountAll({
-            attributes: ['id', 'title', 'views', 'likes','video_path','video_frame','carer_id','created_at', 'updated_at'],
+            attributes: ['id', 'title', 'views', 'likes','video_path','video_frame','carer_id','is_attached'],
             where: {
                 client_id: client
             },
@@ -462,9 +462,10 @@ async function handlerGetCarerVideoListing(req, res) {
         }
 
         const videosData = await Video.findAndCountAll({
-            attributes: ['id', 'title', 'views', 'likes','video_path','video_frame','carer_id','created_at', 'updated_at'],
+            attributes: ['id', 'title', 'views', 'likes','video_path','video_frame','carer_id','is_attached'],
             where: {
-                client_id: client
+                client_id: client,
+                is_attached:false,
             },
             order: [['created_at', 'DESC']]
         });
@@ -540,6 +541,7 @@ async function handlerCreateVideo(req, res) {
             likes: 0,
             views: 0,
             title,
+            is_attached:false,
             video_path: videoPath,
             video_frame: uploadedFramePath  
         });
@@ -583,10 +585,10 @@ async function handlerUpdateVideo(req, res) {
               id: videoId,
             }
           });
-        
-        const {title} = req.body;
-        
 
+          const { title, is_attached,previous_video_id } = req.body;
+          const newTitle = title === "" ? video.dataValues.title : title;
+          const new_Is_attached = is_attached === true ? true : false; 
         if (!video) {
             return responseObject(
                 req,
@@ -599,8 +601,31 @@ async function handlerUpdateVideo(req, res) {
         }
 
         await video.update({
-            title
+            title:newTitle,
+            is_attached:new_Is_attached
         });
+
+        if(previous_video_id){
+            const video = await Video.findOne({
+                where: {
+                  id: previous_video_id,
+                }
+              });
+
+              if (!video) {
+                return responseObject(
+                    req,
+                    res,
+                    "",
+                    responseCode.NOT_FOUND,
+                    false,
+                    responseMessage.VIDEO_NOT_FOUND
+                );
+            }
+            await video.update({
+                is_attached:false
+            });
+        }
 
         return responseObject(
             req,

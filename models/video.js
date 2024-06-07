@@ -32,6 +32,10 @@ const Video = sequelize.define('Video', {
         type: DataTypes.INTEGER,
         allowNull: false
     },
+    is_attached: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true
+    },
     client_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
