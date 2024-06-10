@@ -2,6 +2,7 @@ const {responseObject} = require("../helpers/responseCode");
 const {responseCode} = require("../helpers/statusCode");
 const {responseMessage} = require("../helpers/statusCodeMsg");
 const ProgramCare  = require('../models/programCare');
+const Video = require("../models/video")
 const ProgramCareData  = require('../models/programCareData');
 
 async function handlerGetProgramCare(req, res) {
@@ -47,7 +48,7 @@ async function handlerGetProgramCare(req, res) {
 async function handlerCreateProgramCare(req, res) {
     try {
         const { company_id } = req.decodedToken;
-        const { client_id, program_care_id, arr } = req.body;
+        const { client_id, program_care_id, arr, video_id } = req.body;
 
         let newEntries;
 
@@ -55,6 +56,7 @@ async function handlerCreateProgramCare(req, res) {
             // Prepare bulk insert data
             const bulkData = arr.map(item => ({
                 company_id,
+                video_id,
                 client_id: client_id,
                 program_care_id: program_care_id,
                 description: item.description
@@ -64,6 +66,7 @@ async function handlerCreateProgramCare(req, res) {
             // Single insert
             newEntries = await ProgramCareData.create({
                 company_id,
+                video_id,
                 client_id,
                 program_care_id,
                 description:arr[0].description
@@ -80,7 +83,6 @@ async function handlerCreateProgramCare(req, res) {
                 responseMessage.PROGRAM_CARE_CREATED_SUCCESSFULLY
             );
         } else {
-            console.log("rqwerqwerwerwer12312312",err)
             return responseObject(
                 req,
                 res,
@@ -91,7 +93,82 @@ async function handlerCreateProgramCare(req, res) {
             );
         }
     } catch (err) {
-        console.log("rqwerqwerwerwer",err)
+        return responseObject(
+            req,
+            res,
+            "",
+            responseCode.INTERNAL_SERVER_ERROR,
+            false,
+            responseMessage.SOMETHING_WENT_WRONG
+        );
+    }
+}
+
+async function handlerUpdateProgramCare(req, res) {
+    try {
+        const { company_id } = req.decodedToken;
+        const pocId = req.params.id; 
+        const { video_id,description, } = req.body;
+       
+        const pocData = await ProgramCareData.findOne({
+            where: {
+              id: pocId,
+              company_id: company_id
+            }
+          });
+
+        if (!pocData) {
+            return responseObject(
+                req,
+                res,
+                "",
+                responseCode.NOT_FOUND,
+                false,
+                responseMessage.POC_NOT_FOUND
+            );
+        }
+
+        const previous_video_id = pocData.dataValues.video_id;
+        if(previous_video_id){
+            const video = await Video.findOne({
+                where: {
+                  id: previous_video_id,
+                }
+              });
+
+              if (!video) {
+                return responseObject(
+                    req,
+                    res,
+                    "",
+                    responseCode.NOT_FOUND,
+                    false,
+                    responseMessage.VIDEO_NOT_FOUND
+                );
+            }
+            await video.update({
+                is_attached:false
+            });
+        }
+
+        const newdescription = description === "" ? pocData.dataValues.description:description
+        const newVideoId = video_id == null ? pocData.dataValues.video_id:video_id
+
+        await pocData.update({
+            company_id,
+            video_id:newVideoId,
+            description:newdescription
+        });
+
+        return responseObject(
+            req,
+            res,
+            pocData,
+            responseCode.OK,
+            true,
+            responseMessage.POC_UPDATED_SUCCESSFULLY
+        );
+    } catch (err) {
         return responseObject(
             req,
             res,
@@ -119,6 +196,7 @@ async function handlerGetPOCBYID(req, res) {
                 attributes: [
                     'id',
                     'client_id',
+                    'video_id',
                     'company_id',
                     'program_care_id',
                     'description',
@@ -127,12 +205,17 @@ async function handlerGetPOCBYID(req, res) {
                 ],
                 where: {
                     client_id: client,
-                    program_care_id: poc
+                    program_care_id: poc,
                 },
                 include: [
                     {
                         model: ProgramCare,
                         attributes: ['title'],
+                        required: false
+                    },
+                    {
+                        model: Video,
+                        attributes: ['title', 'video_path','id'],
                         required: false
                     }
                 ],
@@ -150,6 +233,13 @@ async function handlerGetPOCBYID(req, res) {
             totalCount += pocData.count;
             allRows = allRows.concat(pocData.rows);
         });
+
+        allRows.forEach(data => {
+            if (data.Video) {
+                data.Video.video_path = process.env.BUCKET_URL + "/" + data.Video.video_path;
+            }
+        });
+
 
         if (totalCount > 0) {
             return responseObject(
@@ -184,8 +274,10 @@ async function handlerGetPOCBYID(req, res) {
 }
 
 
+
 module.exports={
     handlerGetProgramCare,
     handlerCreateProgramCare,
-    handlerGetPOCBYID
+    handlerGetPOCBYID,
+    handlerUpdateProgramCare
 }

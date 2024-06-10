@@ -58,6 +58,19 @@ exports.up = function(db, callback) {
         mapping: 'id'
       }
     },
+    video_id: {
+      type: 'int',
+      notNull: false,
+      foreignKey: {
+        name: 'programCaredata_video_fk',
+        table: 'videos',
+        rules: {
+          onDelete: 'CASCADE',
+          onUpdate: 'CASCADE'
+        },
+        mapping: 'id'
+      }
+    },
     description: { type: 'string', length: 255, notNull: true },
     created_at: { type: 'timestamp', defaultValue: new String('CURRENT_TIMESTAMP') },
     updated_at: { type: 'timestamp', defaultValue: new String('CURRENT_TIMESTAMP') }

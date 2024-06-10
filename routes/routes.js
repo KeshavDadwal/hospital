@@ -54,11 +54,13 @@ router.get('/procare', ProgramCareController.handlerGetPOCBYID);
 
 router.get('/programcare', ProgramCareController.handlerGetProgramCare);
 router.post('/programcare', ProgramCareController.handlerCreateProgramCare);
+router.put('/programcare/:id', ProgramCareController.handlerUpdateProgramCare);
 
 ////////////////////////////////////////// Mobile
 router.post('/carerlogin', CarerController.handlerCarerLogin);
 router.get('/getcarer', MobileClientController.handlerGetMobileClient);
 router.get('/video', CarerController.handlerGetCarerVideo);
+router.get('/videolisting', CarerController.handlerGetCarerVideoListing);
 router.post('/videocount', CarerVideoCountController.handlerUpdateVideoCount);
 router.post('/uploadvideo', multerMiddleware.single('video'),CarerController.handlerCreateVideo);
 

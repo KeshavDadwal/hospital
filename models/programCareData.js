@@ -3,6 +3,7 @@ const { createSequelizeInstance } = require('../connection');
 const Client = require('./client');
 const Company = require('./company');
 const ProgramCare = require('./programCare');
+const Video = require('./video');
 
 const sequelize = createSequelizeInstance();
 
@@ -42,6 +43,16 @@ const ProgramCareData = sequelize.define('ProgramCareData', {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
     },
+    video_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: Video,
+            key: 'id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
+    },
     description: {
         type: DataTypes.STRING,
         allowNull: false
@@ -59,6 +70,7 @@ ProgramCare.hasMany(ProgramCareData, { foreignKey: 'program_care_id' });
 ProgramCareData.belongsTo(Client, { foreignKey: 'client_id' });
 ProgramCareData.belongsTo(Company, { foreignKey: 'company_id' });
 ProgramCareData.belongsTo(ProgramCare, { foreignKey: 'program_care_id' });
-
+ProgramCareData.belongsTo(Video, { foreignKey: 'video_id' });
+Video.hasMany(ProgramCareData, { foreignKey: 'video_id' });
 module.exports = ProgramCareData;
 
