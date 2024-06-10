@@ -589,6 +589,7 @@ async function handlerUpdateVideo(req, res) {
           const { title, is_attached,previous_video_id } = req.body;
           const newTitle = title === "" ? video.dataValues.title : title;
           const new_Is_attached = is_attached === true ? true : false; 
+
         if (!video) {
             return responseObject(
                 req,

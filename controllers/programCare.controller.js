@@ -128,6 +128,29 @@ async function handlerUpdateProgramCare(req, res) {
             );
         }
 
+        const previous_video_id = pocData.dataValues.video_id;
+        if(previous_video_id){
+            const video = await Video.findOne({
+                where: {
+                  id: previous_video_id,
+                }
+              });
+
+              if (!video) {
+                return responseObject(
+                    req,
+                    res,
+                    "",
+                    responseCode.NOT_FOUND,
+                    false,
+                    responseMessage.VIDEO_NOT_FOUND
+                );
+            }
+            await video.update({
+                is_attached:false
+            });
+        }
+
         const newdescription = description === "" ? pocData.dataValues.description:description
         const newVideoId = video_id == null ? pocData.dataValues.video_id:video_id
 
