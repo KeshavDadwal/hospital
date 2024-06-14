@@ -398,7 +398,7 @@ async function handlerGetCarerVideo(req, res) {
         const offset = (page - 1) * pageSize;
 
         const videosData = await Video.findAndCountAll({
-            attributes: ['id', 'title', 'views', 'likes','video_path','video_frame','carer_id','is_attached'],
+            attributes: ['id', 'title', 'views', 'likes','video_path','video_frame','carer_id','is_attached','created_at'],
             where: {
                 client_id: client
             },
